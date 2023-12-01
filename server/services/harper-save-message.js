@@ -1,6 +1,6 @@
 import axios from "axios";
 
-function harperSaveMessage(message, username, room) {
+function harperSaveMessage(message, username, room, __createdtime__) {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
   if (!dbUrl || !dbPw) return null;

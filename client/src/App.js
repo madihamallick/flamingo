@@ -1,48 +1,14 @@
-import { useEffect, useState } from "react";
 // import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import io from "socket.io-client";
+import Chat from "./Pages/Chat/Chat";
 
 function App() {
   const socket = io.connect("http://localhost:4000", { autoConnect: false });
-  const username = "madiha";
-  const room = "room";
-  const [message, setMessage] = useState();
-  const [messagesReceived, setMessagesReceived] = useState([]);
-
-  useEffect(() => {
-    socket.connect();
-    socket.on("receive_message", (data) => {
-      console.log(data);
-    });
-    socket.on("last_100_messages", (last100Messages) => {
-      console.log("Last 100 messages:", JSON.parse(last100Messages));
-      last100Messages = JSON.parse(last100Messages);
-      // last100Messages = sortMessagesByDate(last100Messages);
-      setMessagesReceived((state) => [...last100Messages, ...state]);
-      console.log(messagesReceived);
-    });
-    return () => {
-      socket.disconnect();
-      socket.off("receive_message");
-      socket.off("last_100_messages");
-    };
-  }, [socket, messagesReceived]);
-
-  const joinRoom = () => {
-    socket.emit("join_room", { username, room });
-  };
-
-  const sendMessage = () => {
-    if (message !== "") {
-      const __createdtime__ = Date.now();
-      socket.emit("send_message", { username, room, message, __createdtime__ });
-    }
-  };
 
   return (
-    <div className="bg-bgcolour h-[100vh]">
-      <div className="w-full max-w-xs mx-auto">
-        <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+    <div>
+      {/* <div className="w-full max-w-xs mx-auto">
+        <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div className="flex items-center justify-between">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -71,8 +37,9 @@ function App() {
           <button className="btn btn-primary" onClick={sendMessage}>
             Send Message
           </button>
-        </form>
-      </div>
+        </div>
+      </div> */}
+      <Chat socket={socket} />
     </div>
   );
 }
