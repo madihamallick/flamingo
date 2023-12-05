@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import LeftMessage from "../../Components/LeftMessage/LeftMessage";
+// import LeftMessage from "../../Components/LeftMessage/LeftMessage";
 
 const Chat = ({ socket }) => {
   const username = "ssssssssss";
@@ -8,48 +8,51 @@ const Chat = ({ socket }) => {
   const [messagesReceived, setMessagesReceived] = useState([]);
   const [media, setMedia] = useState();
 
-  useEffect(() => {
-    socket.connect();
-    socket.on("receive_message", (data) => {
-      console.log("data", data);
-    });
-    socket.on("last_100_messages", (last100Messages) => {
-      console.log("Last 100 messages:", JSON.parse(last100Messages));
-      last100Messages = JSON.parse(last100Messages);
-      setMessagesReceived(last100Messages);
-      console.log(messagesReceived);
-    });
-    return () => {
-      socket.disconnect();
-      socket.off("receive_message");
-      socket.off("last_100_messages");
-    };
-  }, [socket]);
+  // useEffect(() => {
+  //   socket.connect();
+  //   socket.on("receive_message", (data) => {
+  //     console.log("data", data);
+  //   });
+  //   socket.on("last_100_messages", (last100Messages) => {
+  //     console.log("Last 100 messages:", JSON.parse(last100Messages));
+  //     last100Messages = JSON.parse(last100Messages);
+  //     setMessagesReceived(last100Messages);
+  //     console.log(messagesReceived);
+  //   });
+  //   return () => {
+  //     socket.disconnect();
+  //     socket.off("receive_message");
+  //     socket.off("last_100_messages");
+  //   };
+  // }, [socket]);
 
   const joinRoom = () => {
     socket.emit("join_room", { username, room });
   };
 
   const sendMessage = () => {
+    // console.log(message)
     if (message !== "") {
-      const __createdtime__ = Date.now();
-      socket.emit("send_message", {
-        username,
-        room,
-        message,
-        __createdtime__,
-        media,
-      });
-      setMessagesReceived([
-        ...messagesReceived,
-        {
-          message: message,
-          username: username,
-          room: room,
-          __createdtime__: __createdtime__,
-          media: media,
-        },
-      ]);
+      socket.emit("send-chat-message", message);
+      setMessage("");
+      // const __createdtime__ = Date.now();
+      // socket.emit("send_message", {
+      //   username,
+      //   room,
+      //   message,
+      //   __createdtime__,
+      //   media,
+      // });
+      // setMessagesReceived([
+      //   ...messagesReceived,
+      //   {
+      //     message: message,
+      //     username: username,
+      //     room: room,
+      //     __createdtime__: __createdtime__,
+      //     media: media,
+      //   },
+      // ]);
     }
   };
   return (
@@ -143,7 +146,7 @@ const Chat = ({ socket }) => {
             <div className="flex flex-col h-full overflow-x-auto mb-4">
               <div className="flex flex-col h-full">
                 <div className="grid grid-cols-12 gap-y-2">
-                  <LeftMessage messagesReceived={messagesReceived} />
+                  {/* <LeftMessage messagesReceived={messagesReceived} /> */}
                 </div>
               </div>
             </div>
