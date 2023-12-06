@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 // import LeftMessage from "../../Components/LeftMessage/LeftMessage";
 
 const Chat = ({ socket }) => {
-  const username = "ssssssssss";
-  const room = "room";
   const [message, setMessage] = useState();
   const [messagesReceived, setMessagesReceived] = useState([]);
-  const [media, setMedia] = useState();
+  // const [media, setMedia] = useState();
 
   // useEffect(() => {
   //   socket.connect();
@@ -26,14 +24,15 @@ const Chat = ({ socket }) => {
   //   };
   // }, [socket]);
 
-  const joinRoom = () => {
-    socket.emit("join_room", { username, room });
-  };
+  // const joinRoom = () => {
+  //   socket.emit("join_room", { username, room });
+  // };
 
   const sendMessage = () => {
     // console.log(message)
+    const userid = 2;
     if (message !== "") {
-      socket.emit("send-chat-message", message);
+      socket.emit("send-chat-message", { userid, message });
       setMessage("");
       // const __createdtime__ = Date.now();
       // socket.emit("send_message", {

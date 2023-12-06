@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import registerImage from "../../assets/register.svg";
-import harperRegisterUser from "../../services/register-user";
+import Swal from "sweetalert2";
 
 const Register = () => {
   const [values, setValues] = useState({
@@ -17,19 +17,48 @@ const Register = () => {
 
   const handleSubmit = () => {
     console.log(values);
-    harperRegisterUser(values.email, values.username, values.password)
-      .then((response) => console.log(response))
-      .catch((err) => console.log(err));
+    fetch(`${process.env.REACT_APP_NODE_API}/user/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        isAvatarImageSet: false,
+        avatarImage: null,
+      }),
+    }).then((res) => {
+      if (res.status === 200) {
+        res.json().then((data) => {
+          sessionStorage.setItem("token", data.token);
+        });
+        Swal.fire({
+          title: "Successful",
+          text: "You will be logged in few seconds",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      } else {
+        Swal.fire({
+          title: "Error!",
+          text: "Invalid username or password",
+          icon: "error",
+          confirmButtonText: "Try again",
+        });
+      }
+    });
   };
 
   return (
     <div className="min-w-screen min-h-screen bg-gray-900 flex items-center justify-center px-5 py-5">
       <div className="bg-gray-100 text-gray-500 rounded-3xl shadow-xl w-8/12 overflow-hidden max-w-full">
         <div className="md:flex w-full">
-          <div className="hidden md:block w-1/2 bg-indigo-500 py-20 px-10">
+          <div className="hidden lg:block w-1/2 bg-indigo-500 py-20 px-10">
             <img src={registerImage} alt="register" className="w-full" />
           </div>
-          <div className="w-full md:w-1/2 py-10 px-5 md:px-10">
+          <div className="w-full lg:w-1/2 py-10 px-5 md:px-10">
             <div className="text-center mb-10">
               <h1 className="font-bold text-3xl text-gray-900">REGISTER</h1>
             </div>

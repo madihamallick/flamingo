@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import loginImage from "../../assets/login.svg";
+import Swal from "sweetalert2";
 
 const Login = () => {
   const [values, setValues] = useState({
@@ -14,6 +15,35 @@ const Login = () => {
 
   const handleSubmit = () => {
     console.log(values);
+    fetch(`${process.env.REACT_APP_NODE_API}/user/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: values.email,
+        password: values.password,
+      }),
+    }).then((res) => {
+      if (res.status === 200) {
+        res.json().then((data) => {
+          sessionStorage.setItem("token", data.token);
+        });
+        Swal.fire({
+          title: "Successful",
+          text: "You will be logged in few seconds",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      } else {
+        Swal.fire({
+          title: "Error!",
+          text: "Invalid username or password",
+          icon: "error",
+          confirmButtonText: "Try again",
+        });
+      }
+    });
   };
 
   return (
@@ -68,7 +98,10 @@ const Login = () => {
               </div>
               <div className="flex -mx-3">
                 <div className="w-full px-3 mb-5 mt-10">
-                  <button className="block w-full max-w-xs mx-auto bg-indigo-500 hover:bg-indigo-700 focus:bg-indigo-700 text-white rounded-lg px-3 py-3 font-semibold">
+                  <button
+                    className="block w-full max-w-xs mx-auto bg-indigo-500 hover:bg-indigo-700 focus:bg-indigo-700 text-white rounded-lg px-3 py-3 font-semibold"
+                    onClick={handleSubmit}
+                  >
                     LOGIN
                   </button>
                   <div className="text-center text-sm py-2 cursor-pointer">
