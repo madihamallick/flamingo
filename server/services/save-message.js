@@ -40,3 +40,16 @@ function harperSaveMessage(message, username, room, __createdtime__) {
 }
 
 export default harperSaveMessage;
+
+
+// const token = jwt.sign(
+//   { id: user._id, name: user.name, role: user.role },
+//   process.env.JWT_SECRET
+// )
+// return res.json({
+//   token,
+// })
+
+
+// const isPasswordValid = bcryptjs.compareSync(password, user.password)
+// newUser.password = bcryptjs.hashSync(req.body.password, 10)

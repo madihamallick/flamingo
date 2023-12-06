@@ -3,29 +3,48 @@ import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
 import { config } from "dotenv";
-import harperSaveMessage from "./services/harper-save-message.js";
-import harperGetMessages from "./services/harper-get-messages.js";
+import helmet from "helmet";
+import { userRouter } from "./routes/user.route.js";
+import bodyParser from "body-parser";
+// import harperSaveMessage from "./services/save-message.js";
+// import harperGetMessages from "./services/get-messages.js";
 
 const app = express();
 const server = http.createServer(app);
 
 app.use(cors());
+app.use(helmet());
+app.disable("x-powered-by");
+app.use(bodyParser.json());
+app.use("/user", userRouter);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000"
+    origin: "http://localhost:3000",
   },
 });
 
 config();
 
-io.on('connection', (socket) => {
-  socket.on('send-chat-message', message => {
-    socket.broadcast.emit('chat-message', message)
-  })
-  // socket.on('chat-message', (msg) => {
-  //   console.log('message: ' + msg);
-  // });
+global.onlineUsers = new Map();
+io.on("connection", (socket) => {
+  global.chatSocket = socket;
+
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+    console.log(onlineUsers);
+  });
+
+  socket.on("send-chat-message", ({ toUserId, message }) => {
+    const toUserSocketId = onlineUsers.get(toUserId);
+    if (toUserSocketId) {
+      io.to(toUserSocketId).emit("chat-message", message);
+    }
+  });
 });
 
-server.listen(4000, () => "Server is running on port 4000");
+app.get("/", (req, res) => {
+  res.send("Backend for Flamingo");
+});
+
+server.listen(4000, () => console.log("Server is running on port 4000"));
