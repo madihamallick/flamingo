@@ -8,15 +8,15 @@ import Login from "./pages/Login/Login";
 function App() {
   const socket = io("http://localhost:4000");
 
-  useEffect(() => {
-    socket.emit("add-user", 1);
-  }, []);
+  // useEffect(() => {
+  //   socket.emit("add-user", 1);
+  // }, []);
 
-  useEffect(() => {
-    socket.on("chat-message", (msg) => {
-      console.log("message: " + msg);
-    });
-  }, [socket]);
+  // useEffect(() => {
+  //   socket.on("chat-message", (msg) => {
+  //     console.log("message: " + msg);
+  //   });
+  // }, [socket]);
 
   return (
     <Router>

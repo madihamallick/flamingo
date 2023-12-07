@@ -1,9 +1,11 @@
 import axios from "axios";
 import bcryptjs from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export const harperRegisterUser = (req, res) => {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
+  const { email, password } = req.body;
   if (!dbUrl || !dbPw) return null;
 
   const checkExistingUserQuery = {
@@ -11,7 +13,7 @@ export const harperRegisterUser = (req, res) => {
     schema: "flamingo",
     table: "users",
     search_attribute: "email",
-    search_value: req.body.email,
+    search_value: email,
   };
 
   var checkExistingUserConfig = {
@@ -36,9 +38,7 @@ export const harperRegisterUser = (req, res) => {
           operation: "insert",
           schema: "flamingo",
           table: "users",
-          records: [
-            { ...req.body, password: bcryptjs.hashSync(req.body.password, 10) },
-          ],
+          records: [{ ...req.body, password: bcryptjs.hashSync(password, 10) }],
         };
 
         var insertUserConfig = {
@@ -63,4 +63,136 @@ export const harperRegisterUser = (req, res) => {
         message: error,
       });
     });
+};
+
+export const harperLoginUser = (req, res) => {
+  const { email, password } = req.body;
+  const dbUrl = process.env.HARPERDB_URL;
+  const dbPw = process.env.HARPERDB_PW;
+  if (!dbUrl || !dbPw) return null;
+
+  const checkExistingUserQuery = {
+    operation: "search_by_value",
+    schema: "flamingo",
+    table: "users",
+    search_attribute: "email",
+    search_value: email,
+  };
+
+  var checkExistingUserConfig = {
+    method: "post",
+    url: dbUrl,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: dbPw,
+    },
+    data: JSON.stringify(checkExistingUserQuery),
+  };
+
+  axios(checkExistingUserConfig)
+    .then(function (response) {
+      const existingUser = response.data[0];
+      if (existingUser) {
+        const isPasswordValid = bcryptjs.compareSync(
+          password,
+          existingUser.password
+        );
+        if (!isPasswordValid) {
+          return res.status(400).send({
+            message: "Invalid Password",
+          });
+        } else {
+          const token = jwt.sign(
+            {
+              id: existingUser.id,
+              name: existingUser.username,
+              email: existingUser.email,
+            },
+            process.env.JWT_SECRET
+          );
+          return res.status(200).send({
+            message: "User logged in successfully",
+            token: token,
+            userid: existingUser.id,
+          });
+        }
+      } else {
+        return res.status(400).send({
+          message: "User with this email doesn't exist",
+        });
+      }
+    })
+    .catch(function (error) {
+      return res.status(400).send({
+        message: error,
+      });
+    });
+};
+
+export const harperAllUsers = (req, res) => {
+  const dbUrl = process.env.HARPERDB_URL;
+  const dbPw = process.env.HARPERDB_PW;
+  if (!dbUrl || !dbPw) return null;
+
+  let data = JSON.stringify({
+    operation: "sql",
+    sql: `SELECT * FROM flamingo.users`,
+  });
+
+  let config = {
+    method: "post",
+    url: dbUrl,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: dbPw,
+    },
+    data: data,
+  };
+
+  axios(config)
+    .then(function (response) {
+      return res.status(200).send({
+        users: response.data,
+      });
+    })
+    .catch(function (error) {
+      return res.status(400).send({
+        message: error,
+      });
+    });
+};
+
+export const harperGetUser = async (req, res) => {
+  const dbUrl = process.env.HARPERDB_URL;
+  const dbPw = process.env.HARPERDB_PW;
+  if (!dbUrl || !dbPw) return null;
+
+  const checkExistingUserQuery = {
+    operation: "search_by_value",
+    schema: "flamingo",
+    table: "users",
+    search_attribute: "id",
+    search_value: req.params.id,
+  };
+
+  var checkExistingUserConfig = {
+    method: "post",
+    url: dbUrl,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: dbPw,
+    },
+    data: JSON.stringify(checkExistingUserQuery),
+  };
+
+  axios(checkExistingUserConfig).then(function (response) {
+    const existingUser = response.data[0];
+    if (existingUser) {
+      return res.status(200).json({ user: existingUser });
+    } else {
+      return res
+        .status(400)
+        .json({ message: "No user found with this user id" });
+    }
+  });
 };

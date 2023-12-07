@@ -1,6 +1,6 @@
 import axios from "axios";
 
-function harperSaveMessage(message, username, room, __createdtime__) {
+function harperSaveMessage(message, toUserId, fromUserId) {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
   if (!dbUrl || !dbPw) return null;
@@ -12,8 +12,8 @@ function harperSaveMessage(message, username, room, __createdtime__) {
     records: [
       {
         message,
-        username,
-        room,
+        toUserId,
+        fromUserId,
       },
     ],
   });
@@ -40,16 +40,3 @@ function harperSaveMessage(message, username, room, __createdtime__) {
 }
 
 export default harperSaveMessage;
-
-
-// const token = jwt.sign(
-//   { id: user._id, name: user.name, role: user.role },
-//   process.env.JWT_SECRET
-// )
-// return res.json({
-//   token,
-// })
-
-
-// const isPasswordValid = bcryptjs.compareSync(password, user.password)
-// newUser.password = bcryptjs.hashSync(req.body.password, 10)

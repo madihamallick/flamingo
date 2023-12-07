@@ -31,9 +31,6 @@ const Register = () => {
       }),
     }).then((res) => {
       if (res.status === 200) {
-        res.json().then((data) => {
-          sessionStorage.setItem("token", data.token);
-        });
         Swal.fire({
           title: "Successful",
           text: "You will be logged in few seconds",
@@ -41,11 +38,13 @@ const Register = () => {
           confirmButtonText: "OK",
         });
       } else {
-        Swal.fire({
-          title: "Error!",
-          text: "Invalid username or password",
-          icon: "error",
-          confirmButtonText: "Try again",
+        res.json().then((error) => {
+          Swal.fire({
+            title: "Error!",
+            text: error.message || "An error occurred",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
         });
       }
     });

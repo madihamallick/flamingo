@@ -6,8 +6,8 @@ import { config } from "dotenv";
 import helmet from "helmet";
 import { userRouter } from "./routes/user.route.js";
 import bodyParser from "body-parser";
-// import harperSaveMessage from "./services/save-message.js";
-// import harperGetMessages from "./services/get-messages.js";
+import harperSaveMessage from "./services/save-message.js";
+import harperGetMessages from "./services/get-messages.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -32,13 +32,19 @@ io.on("connection", (socket) => {
 
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
-    console.log(onlineUsers);
+    console.log("User added:", userId, socket.id);
   });
 
-  socket.on("send-chat-message", ({ toUserId, message }) => {
+  socket.on("send-chat-message", ({ toUserId, message, fromUserId }) => {
     const toUserSocketId = onlineUsers.get(toUserId);
     if (toUserSocketId) {
-      io.to(toUserSocketId).emit("chat-message", message);
+      console.log("Sending message to:", toUserId, message, fromUserId);
+      io.to(toUserSocketId).emit("chat-message", toUserId, message, fromUserId);
+      harperSaveMessage(message, toUserId, fromUserId)
+        .then((response) => console.log(response))
+        .catch((err) => console.log(err));
+    } else {
+      console.log("User not found:", toUserId);
     }
   });
 });
