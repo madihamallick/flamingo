@@ -32,13 +32,17 @@ io.on("connection", (socket) => {
 
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
-    console.log("User added:", userId, socket.id);
+
+    harperGetMessages(userId)
+      .then((data) => {
+        socket.emit("previous-message", data);
+      })
+      .catch((err) => console.log(err));
   });
 
   socket.on("send-chat-message", ({ toUserId, message, fromUserId }) => {
     const toUserSocketId = onlineUsers.get(toUserId);
     if (toUserSocketId) {
-      console.log("Sending message to:", toUserId, message, fromUserId);
       io.to(toUserSocketId).emit("chat-message", toUserId, message, fromUserId);
       harperSaveMessage(message, toUserId, fromUserId)
         .then((response) => console.log(response))

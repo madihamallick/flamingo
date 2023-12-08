@@ -10,9 +10,16 @@ const Chat = ({ socket }) => {
   const [users, setUsers] = useState([]);
   const [username, setUsername] = useState();
 
+  const userid = sessionStorage.getItem("token");
+
   useEffect(() => {
     if (!sessionStorage.getItem("token")) {
       navigate("/login");
+    } else {
+      const decodedToken = atob(sessionStorage.getItem("token")?.split(".")[1]);
+
+      const userData = JSON.parse(decodedToken);
+      setUsername(userData.name);
     }
     fetch(`${process.env.REACT_APP_NODE_API}/user`, {
       method: "GET",
@@ -23,7 +30,7 @@ const Chat = ({ socket }) => {
       if (res.status === 200) {
         res.json().then((data) => {
           let filtereddata = data.users.filter(
-            (data) => data.id != sessionStorage.getItem("userid")
+            (data) => data.id !== sessionStorage.getItem("userid")
           );
           setUsers(filtereddata);
         });
@@ -33,29 +40,44 @@ const Chat = ({ socket }) => {
         });
       }
     });
-    const decodedToken = atob(sessionStorage.getItem("token").split(".")[1]);
-
-    const userData = JSON.parse(decodedToken);
-    setUsername(userData.name);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const userid = sessionStorage.getItem("userid");
     socket.emit("add-user", userid);
+    socket.on("previous-message", (messages) => {
+      const currentUserID = sessionStorage.getItem("userid");
+
+      const filteredMessages = JSON.parse(messages).filter((data) => {
+        const isCurrentUserSender =
+          data.fromUserId === currentUserID && data.toUserId === sender?.id;
+
+        const isSenderCurrentUser =
+          data.fromUserId === sender?.id && data.toUserId === currentUserID;
+
+        return isCurrentUserSender || isSenderCurrentUser;
+      });
+
+      const sortedMessages = filteredMessages.sort(
+        (a, b) => a.__createdtime__ - b.__createdtime__
+      );
+
+      setMessagesReceived(sortedMessages);
+    });
     socket.on("chat-message", (toUserId, message, fromUserId) => {
       setMessagesReceived((prevMessages) => [
         ...prevMessages,
         { toUserId, message, fromUserId },
       ]);
     });
-    console.log(messagesReceived);
     return () => {
       socket.off("chat-message");
+      socket.off("previous-messages");
     };
-  }, [socket]);
+  }, [socket, userid, sender]);
 
   const sendMessage = () => {
-    if (message !== "" && sender != "") {
+    if (message !== "" && sender !== "") {
       socket.emit("send-chat-message", {
         toUserId: sender.id,
         message,
@@ -167,7 +189,7 @@ const Chat = ({ socket }) => {
                     {messagesReceived.map((message, index) => {
                       return (
                         <React.Fragment key={index}>
-                          {message.fromUserId ==
+                          {message.fromUserId ===
                           sessionStorage.getItem("userid") ? (
                             <div className="col-start-6 col-end-13 p-3 rounded-lg">
                               <div className="flex items-center justify-start flex-row-reverse">

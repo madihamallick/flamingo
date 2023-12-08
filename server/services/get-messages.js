@@ -1,13 +1,13 @@
 import axios from "axios";
 
-function harperGetMessages(room) {
+function harperGetMessages(userId) {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
   if (!dbUrl || !dbPw) return null;
 
   let data = JSON.stringify({
     operation: 'sql',
-    sql: `SELECT * FROM flamingo.messages WHERE room = '${room}' LIMIT 100`,
+    sql: `SELECT * FROM flamingo.messages WHERE toUserId = '${userId}' OR fromUserId = '${userId}'`,
   });
 
   let config = {

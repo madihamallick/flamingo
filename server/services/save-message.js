@@ -1,6 +1,6 @@
 import axios from "axios";
 
-function harperSaveMessage(message, toUserId, fromUserId) {
+function harperSaveMessage(message, toUserId, fromUserId, toUserSocketId) {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
   if (!dbUrl || !dbPw) return null;
@@ -14,6 +14,7 @@ function harperSaveMessage(message, toUserId, fromUserId) {
         message,
         toUserId,
         fromUserId,
+        toUserSocketId
       },
     ],
   });
