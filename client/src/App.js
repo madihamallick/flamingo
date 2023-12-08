@@ -5,7 +5,7 @@ import Register from "./pages/Register/Register";
 import Login from "./pages/Login/Login";
 
 function App() {
-  const socket = io("http://localhost:4000");
+  const socket = io(process.env.REACT_APP_NODE_API);
 
   return (
     <Router>
