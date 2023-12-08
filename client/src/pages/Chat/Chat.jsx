@@ -94,11 +94,12 @@ const Chat = ({ socket }) => {
       setMessage("");
     }
   };
+
+  const handleInputChange = (e) => {
+    console.log(e.target.value);
+  };
   return (
     <div className="flex h-screen antialiased text-gray-800">
-      {messagesReceived &&
-        messagesReceived.length > 0 &&
-        console.log(messagesReceived)}
       <div className="flex flex-row h-full w-full overflow-x-hidden">
         <div className="flex flex-col py-8 pl-6 pr-2 w-64 bg-white flex-shrink-0">
           <div className="flex flex-row items-center justify-center h-12 w-full">
@@ -136,14 +137,40 @@ const Chat = ({ socket }) => {
               <div className="leading-none ml-1 text-xs">Active</div>
             </div>
           </div>
-          <div className="flex flex-col mt-8">
-            <div className="flex flex-row items-center justify-between text-xs">
+          <div className="flex flex-col mt-16">
+            <div className="flex items-center">
+              <div className="flex border border-purple-200 rounded">
+                <input
+                  type="text"
+                  onChange={(e) => handleInputChange(e)}
+                  className="block w-full px-4 text-sm py-2 bg-white border rounded-md focus:border-bluelight focus:ring-bluelight focus:outline-none focus:ring focus:ring-opacity-40"
+                  placeholder="Search by name..."
+                />
+                <button className="px-4">
+                  <svg
+                    className="svg-icon search-icon"
+                    aria-labelledby="title desc"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 19.9 19.7"
+                  >
+                    <title id="title">Search Icon</title>
+                    <desc id="desc">A magnifying glass icon.</desc>
+                    <g className="search-path" fill="none" stroke="#848F91">
+                      <path strokeLinecap="square" d="M18.5 18.3l-5.4-5.4" />
+                      <circle cx="8" cy="8" r="7" />
+                    </g>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-row items-center justify-between text-xs mt-10">
               <span className="font-bold">Active Conversations</span>
               <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
                 4
               </span>
             </div>
-            <div className="flex flex-col space-y-1 mt-4 -mx-2 h-48 overflow-y-auto">
+            <div className="flex flex-col space-y-1 mt-4 -mx-2">
               {users.map((user, index) => {
                 return (
                   <button
@@ -160,20 +187,6 @@ const Chat = ({ socket }) => {
                   </button>
                 );
               })}
-            </div>
-            <div className="flex flex-row items-center justify-between text-xs mt-6">
-              <span className="font-bold">Archivied</span>
-              <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
-                7
-              </span>
-            </div>
-            <div className="flex flex-col space-y-1 mt-4 -mx-2">
-              <button className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2">
-                <div className="flex items-center justify-center h-8 w-8 bg-bluelight text-white rounded-full">
-                  H
-                </div>
-                <div className="ml-2 text-sm font-semibold">Henry Boyd</div>
-              </button>
             </div>
           </div>
         </div>
