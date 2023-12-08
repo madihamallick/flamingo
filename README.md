@@ -1,4 +1,6 @@
 # flamingo
 
 
-<img src=https://github.com/curiomind-e-learning/curiomind-server/assets/70858557/746254b0-d571-4402-a011-f2f15859f584 width=400 height=500 />
+<div align="center">
+  <img src="https://github.com/curiomind-e-learning/curiomind-server/assets/70858557/7e018568-8ed6-4abd-9dac-32a2c631e0b2" width="400" height="500" />
+</div>
