@@ -3,7 +3,7 @@ import axios from "axios";
 function harperSaveMessage(message, toUserId, fromUserId, toUserSocketId) {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
-  if (!dbUrl || !dbPw) return null;
+  if (!dbUrl || !dbPw) return Promise.reject("Invalid HarperDB configuration.");
 
   var data = JSON.stringify({
     operation: "insert",

@@ -28,7 +28,7 @@ const Login = () => {
       if (res.status === 200) {
         res.json().then((data) => {
           sessionStorage.setItem("token", data.token);
-          sessionStorage.setItem("userid", data.userid);
+          sessionStorage.setItem("user", JSON.stringify(data.user));
         });
         Swal.fire({
           title: "Successful",

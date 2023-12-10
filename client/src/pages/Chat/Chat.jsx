@@ -10,7 +10,8 @@ const Chat = ({ socket }) => {
   const [users, setUsers] = useState([]);
   const [username, setUsername] = useState();
 
-  const userid = sessionStorage.getItem("token");
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const userid = JSON.parse(sessionStorage.getItem("user"))?.id;
 
   useEffect(() => {
     if (!sessionStorage.getItem("token")) {
@@ -29,8 +30,8 @@ const Chat = ({ socket }) => {
     }).then((res) => {
       if (res.status === 200) {
         res.json().then((data) => {
-          let filtereddata = data.users.filter(
-            (data) => data.id !== sessionStorage.getItem("userid")
+          let filtereddata = data?.users?.filter(
+            (data) => data.id !== userid
           );
           setUsers(filtereddata);
         });
@@ -40,13 +41,12 @@ const Chat = ({ socket }) => {
         });
       }
     });
-  }, [navigate]);
+  }, [navigate, userid]);
 
   useEffect(() => {
-    const userid = sessionStorage.getItem("userid");
     socket.emit("add-user", userid);
     socket.on("previous-message", (messages) => {
-      const currentUserID = sessionStorage.getItem("userid");
+      const currentUserID = userid;
 
       const filteredMessages = JSON.parse(messages).filter((data) => {
         const isCurrentUserSender =
@@ -57,7 +57,6 @@ const Chat = ({ socket }) => {
 
         return isCurrentUserSender || isSenderCurrentUser;
       });
-
       const sortedMessages = filteredMessages.sort(
         (a, b) => a.__createdtime__ - b.__createdtime__
       );
@@ -79,16 +78,38 @@ const Chat = ({ socket }) => {
   const sendMessage = () => {
     if (message !== "" && sender !== "") {
       socket.emit("send-chat-message", {
-        toUserId: sender.id,
+        toUserId: sender?.id,
         message,
-        fromUserId: sessionStorage.getItem("userid"),
+        fromUserId: user?.id,
+      });
+      fetch(`${process.env.REACT_APP_NODE_API}/user/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user: user,
+          friend: sender,
+          message: message,
+          timestamp: Date.now(),
+        }),
+      }).then((res) => {
+        if (res.status === 200) {
+          res.json().then((data) => {
+            console.log(data);
+          });
+        } else {
+          res.json().then((error) => {
+            console.log(error);
+          });
+        }
       });
       setMessagesReceived((prevMessages) => [
         ...prevMessages,
         {
           toUserId: sender.id,
           message,
-          fromUserId: sessionStorage.getItem("userid"),
+          fromUserId: user?.id,
         },
       ]);
       setMessage("");
@@ -155,7 +176,6 @@ const Chat = ({ socket }) => {
                     viewBox="0 0 19.9 19.7"
                   >
                     <title id="title">Search Icon</title>
-                    <desc id="desc">A magnifying glass icon.</desc>
                     <g className="search-path" fill="none" stroke="#848F91">
                       <path strokeLinecap="square" d="M18.5 18.3l-5.4-5.4" />
                       <circle cx="8" cy="8" r="7" />
@@ -192,8 +212,8 @@ const Chat = ({ socket }) => {
         </div>
         <div className="flex flex-col flex-auto h-full p-6">
           {sender ? (
-            <div className="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-bluegrey h-full p-4">
-              <div className="flex flex-col h-full overflow-x-auto mb-4">
+            <div className="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-bluegrey h-full py-4 px-2">
+              <div className="flex flex-col h-full overflow-x-auto mb-4 custom-scrollbar">
                 <div className="flex flex-col h-full">
                   <div className="text-sm text-white font-semibold">
                     Chatting with {sender.username}
@@ -202,15 +222,20 @@ const Chat = ({ socket }) => {
                     {messagesReceived.map((message, index) => {
                       return (
                         <React.Fragment key={index}>
-                          {message.fromUserId ===
-                          sessionStorage.getItem("userid") ? (
+                          {message.fromUserId === user?.id ? (
                             <div className="col-start-6 col-end-13 p-3 rounded-lg">
                               <div className="flex items-center justify-start flex-row-reverse">
                                 <div className="flex items-center justify-center h-10 w-10 rounded-full bg-bluelight flex-shrink-0">
                                   A
                                 </div>
-                                <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
-                                  <div>{message.message}</div>
+                                <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl overflow-auto">
+                                  <div
+                                    style={{
+                                      wordWrap: "break-word",
+                                    }}
+                                  >
+                                    {message.message}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -218,10 +243,16 @@ const Chat = ({ socket }) => {
                             <div className="col-start-1 col-end-8 p-3 rounded-lg">
                               <div className="flex flex-row items-center">
                                 <div className="flex items-center justify-center h-10 w-10 rounded-full bg-bluelight flex-shrink-0">
-                                  A
+                                  {sender.username[0]}
                                 </div>
-                                <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                                  <div>{message.message}</div>
+                                <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl overflow-auto">
+                                  <div
+                                    style={{
+                                      wordWrap: "break-word",
+                                    }}
+                                  >
+                                    {message.message}
+                                  </div>
                                 </div>
                               </div>
                             </div>

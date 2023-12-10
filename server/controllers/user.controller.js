@@ -6,7 +6,7 @@ export const harperRegisterUser = (req, res) => {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
   const { email, password } = req.body;
-  if (!dbUrl || !dbPw) return null;
+  if (!dbUrl || !dbPw) return Promise.reject("Invalid HarperDB configuration.");
 
   const checkExistingUserQuery = {
     operation: "search_by_value",
@@ -69,7 +69,7 @@ export const harperLoginUser = (req, res) => {
   const { email, password } = req.body;
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
-  if (!dbUrl || !dbPw) return null;
+  if (!dbUrl || !dbPw) return Promise.reject("Invalid HarperDB configuration.");
 
   const checkExistingUserQuery = {
     operation: "search_by_value",
@@ -113,7 +113,10 @@ export const harperLoginUser = (req, res) => {
           return res.status(200).send({
             message: "User logged in successfully",
             token: token,
-            userid: existingUser.id,
+            user: {
+              id: existingUser.id,
+              username: existingUser.username,
+            },
           });
         }
       } else {
@@ -132,7 +135,7 @@ export const harperLoginUser = (req, res) => {
 export const harperAllUsers = (req, res) => {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
-  if (!dbUrl || !dbPw) return null;
+  if (!dbUrl || !dbPw) return Promise.reject("Invalid HarperDB configuration.");
 
   let data = JSON.stringify({
     operation: "sql",
@@ -165,7 +168,7 @@ export const harperAllUsers = (req, res) => {
 export const harperGetUser = async (req, res) => {
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
-  if (!dbUrl || !dbPw) return null;
+  if (!dbUrl || !dbPw) return Promise.reject("Invalid HarperDB configuration.");
 
   const checkExistingUserQuery = {
     operation: "search_by_value",
@@ -188,11 +191,106 @@ export const harperGetUser = async (req, res) => {
   axios(checkExistingUserConfig).then(function (response) {
     const existingUser = response.data[0];
     if (existingUser) {
-      return res.status(200).json({ user: existingUser });
+      return res.status(200).json({ user: { existingUser } });
     } else {
       return res
         .status(400)
         .json({ message: "No user found with this user id" });
     }
   });
+};
+
+export const harperUserMessage = async (req, res) => {
+  const dbUrl = process.env.HARPERDB_URL;
+  const dbPw = process.env.HARPERDB_PW;
+
+  if (!dbUrl || !dbPw) {
+    return res.status(500).send("Invalid HarperDB configuration.");
+  }
+
+  const { user, friend, message, timestamp } = req.body;
+
+  try {
+    const userDataResponse = await axios.post(
+      dbUrl,
+      {
+        operation: "search_by_value",
+        schema: "flamingo",
+        table: "user_messages",
+        search_attribute: "user_id",
+        search_value: user.id,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: dbPw,
+        },
+      }
+    );
+
+    const userData = userDataResponse.data[0];
+
+    if (userData) {
+      const existingFriend = userData.friends.find(
+        (existingFriend) => existingFriend.friend.id === friend.id
+      );
+
+      if (existingFriend) {
+        existingFriend.last_message = message;
+        existingFriend.timestamp = timestamp;
+      } else {
+        userData.friends.push({
+          friend: friend,
+          last_message: message,
+          timestamp: timestamp,
+        });
+      }
+
+      const updateUserMessagesQuery = {
+        operation: "update",
+        schema: "flamingo",
+        table: "user_messages",
+        records: [userData],
+      };
+
+      await axios.post(dbUrl, updateUserMessagesQuery, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: dbPw,
+        },
+      });
+    } else {
+      const newUser = {
+        user_id: user.id,
+        friends: [
+          {
+            friend: friend,
+            last_message: message,
+            timestamp: timestamp,
+          },
+        ],
+      };
+
+      const insertUserMessagesQuery = {
+        operation: "insert",
+        schema: "flamingo",
+        table: "user_messages",
+        records: [newUser],
+      };
+
+      await axios.post(dbUrl, insertUserMessagesQuery, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: dbPw,
+        },
+      });
+    }
+
+    return res.status(200).send({
+      message: "Message sent successfully",
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).send("Internal Server Error");
+  }
 };

@@ -32,6 +32,7 @@ io.on("connection", (socket) => {
 
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
+    console.log(onlineUsers);
 
     harperGetMessages(userId)
       .then((data) => {
@@ -44,12 +45,12 @@ io.on("connection", (socket) => {
     const toUserSocketId = onlineUsers.get(toUserId);
     if (toUserSocketId) {
       io.to(toUserSocketId).emit("chat-message", toUserId, message, fromUserId);
-      harperSaveMessage(message, toUserId, fromUserId)
-        .then((response) => console.log(response))
-        .catch((err) => console.log(err));
     } else {
       console.log("User not found:", toUserId);
     }
+    harperSaveMessage(message, toUserId, fromUserId)
+      .then((response) => console.log(response))
+      .catch((err) => console.log(err));
   });
 });
 
