@@ -20,7 +20,7 @@ app.use("/user", userRouter);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.REACT_URL,
+    origin: "*",
   },
 });
 
