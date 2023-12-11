@@ -294,3 +294,48 @@ export const harperUserMessage = async (req, res) => {
     return res.status(500).send("Internal Server Error");
   }
 };
+
+export const harperGetUserMessage = async (req, res) => {
+  const dbUrl = process.env.HARPERDB_URL;
+  const dbPw = process.env.HARPERDB_PW;
+
+  if (!dbUrl || !dbPw) {
+    return res.status(500).send("Invalid HarperDB configuration.");
+  }
+
+  const { id } = req.params;
+  try {
+    const userDataResponse = await axios.post(
+      dbUrl,
+      {
+        operation: "search_by_value",
+        schema: "flamingo",
+        table: "user_messages",
+        search_attribute: "user_id",
+        search_value: id,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: dbPw,
+        },
+      }
+    );
+
+    const userData = userDataResponse.data[0];
+
+    if (userData) {
+      return res.status(200).send({
+        message: "User messages fetched successfully",
+        data: userData,
+      });
+    } else {
+      return res.status(400).send({
+        message: "Could not find user messages",
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).send("Internal Server Error");
+  }
+};

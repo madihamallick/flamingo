@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import robotgif from "../../assets/robot.gif";
 
 const Chat = ({ socket }) => {
   const navigate = useNavigate();
+  const inputRef = useRef(null);
   const [message, setMessage] = useState();
   const [messagesReceived, setMessagesReceived] = useState([]);
   const [sender, setSender] = useState();
   const [users, setUsers] = useState([]);
   const [username, setUsername] = useState();
+  const [friends, setFriends] = useState();
+  const [searchuser, setSearchuser] = useState([]);
 
   const user = JSON.parse(sessionStorage.getItem("user"));
   const userid = JSON.parse(sessionStorage.getItem("user"))?.id;
@@ -30,10 +33,25 @@ const Chat = ({ socket }) => {
     }).then((res) => {
       if (res.status === 200) {
         res.json().then((data) => {
-          let filtereddata = data?.users?.filter(
-            (data) => data.id !== userid
-          );
+          let filtereddata = data?.users?.filter((data) => data.id !== userid);
           setUsers(filtereddata);
+        });
+      } else {
+        res.json().then((error) => {
+          console.log(error);
+        });
+      }
+    });
+
+    fetch(`${process.env.REACT_APP_NODE_API}/user/messages/${userid}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((res) => {
+      if (res.status === 200) {
+        res.json().then((data) => {
+          setFriends(data?.data?.friends);
         });
       } else {
         res.json().then((error) => {
@@ -82,6 +100,35 @@ const Chat = ({ socket }) => {
         message,
         fromUserId: user?.id,
       });
+
+      friends &&
+        friends.length > 0 &&
+        setFriends((prevFriends) => {
+          const isFriendExists = prevFriends?.some(
+            (friend) => friend.friend.username === sender.username
+          );
+
+          if (!isFriendExists) {
+            return [
+              ...prevFriends,
+              {
+                friend: sender,
+                last_message: message,
+                timestamp: Date.now(),
+              },
+            ];
+          }
+
+          return prevFriends?.map((friend) =>
+            friend.friend.username === sender.username
+              ? {
+                  ...friend,
+                  last_message: message,
+                  timestamp: Date.now(),
+                }
+              : friend
+          );
+        });
       fetch(`${process.env.REACT_APP_NODE_API}/user/messages`, {
         method: "POST",
         headers: {
@@ -117,8 +164,24 @@ const Chat = ({ socket }) => {
   };
 
   const handleInputChange = (e) => {
-    console.log(e.target.value);
+    const searchTerm = e.target.value;
+    if (searchTerm) {
+      setSearchuser(
+        users.filter((user) =>
+          user.username.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    } else {
+      setSearchuser([]);
+    }
   };
+
+  const handleAddFriend = (friend) => {
+    setSearchuser([]);
+    setSender(friend);
+    inputRef.current.value = "";
+  };
+
   return (
     <div className="flex h-screen antialiased text-gray-800">
       <div className="flex flex-row h-full w-full overflow-x-hidden">
@@ -160,14 +223,15 @@ const Chat = ({ socket }) => {
           </div>
           <div className="flex flex-col mt-16">
             <div className="flex items-center">
-              <div className="flex border border-purple-200 rounded">
+              <div className="flex border border-purple-200 rounded relative">
                 <input
                   type="text"
+                  ref={inputRef}
                   onChange={(e) => handleInputChange(e)}
                   className="block w-full px-4 text-sm py-2 bg-white border rounded-md focus:border-bluelight focus:ring-bluelight focus:outline-none focus:ring focus:ring-opacity-40"
                   placeholder="Search by name..."
                 />
-                <button className="px-4">
+                <button className="px-4 absolute right-0 top-0 bottom-0 flex items-center justify-center">
                   <svg
                     className="svg-icon search-icon"
                     aria-labelledby="title desc"
@@ -182,31 +246,46 @@ const Chat = ({ socket }) => {
                     </g>
                   </svg>
                 </button>
+                {searchuser && searchuser.length > 0 && (
+                  <div className="absolute z-10 mt-10 bg-white border border-gray-300 rounded w-full">
+                    {searchuser.map((user, index) => (
+                      <div
+                        key={index}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleAddFriend(user)}
+                      >
+                        {user.username}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
+
             <div className="flex flex-row items-center justify-between text-xs mt-10">
               <span className="font-bold">Active Conversations</span>
               <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
                 4
               </span>
             </div>
-            <div className="flex flex-col space-y-1 mt-4 -mx-2">
-              {users.map((user, index) => {
-                return (
-                  <button
-                    key={index}
-                    className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
-                    onClick={() => setSender(user)}
-                  >
-                    <div className="flex items-center justify-center h-8 w-8 text-white bg-bluelight rounded-full">
-                      {user.username[0]}
-                    </div>
-                    <div className="ml-2 text-sm font-semibold">
-                      {user.username}
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="flex flex-col space-y-1 mt-4 -mx-2 max-h-72 overflow-y-scroll custom-scrollbar">
+              {friends &&
+                friends.map((user, index) => {
+                  return (
+                    <button
+                      key={index}
+                      className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
+                      onClick={() => setSender(user.friend)}
+                    >
+                      <div className="flex items-center justify-center h-8 w-8 text-white bg-bluelight rounded-full">
+                        {user?.friend.username[0]}
+                      </div>
+                      <div className="ml-2 text-sm font-semibold">
+                        {user?.friend.username}
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -226,7 +305,7 @@ const Chat = ({ socket }) => {
                             <div className="col-start-6 col-end-13 p-3 rounded-lg">
                               <div className="flex items-center justify-start flex-row-reverse">
                                 <div className="flex items-center justify-center h-10 w-10 rounded-full bg-bluelight flex-shrink-0">
-                                  A
+                                  {user.username[0]}
                                 </div>
                                 <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl overflow-auto">
                                   <div
@@ -344,7 +423,7 @@ const Chat = ({ socket }) => {
                 className="mx-auto"
               />
               <h3 className="text-lg italic text-gray-700 text-center">
-                Hello there, click on the user you want to have chit chat with
+                Hello there, search for the user you want to have chit chat with
               </h3>
             </div>
           )}
