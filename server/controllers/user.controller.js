@@ -113,10 +113,7 @@ export const harperLoginUser = (req, res) => {
           return res.status(200).send({
             message: "User logged in successfully",
             token: token,
-            user: {
-              id: existingUser.id,
-              username: existingUser.username,
-            },
+            user: existingUser,
           });
         }
       } else {
@@ -200,142 +197,83 @@ export const harperGetUser = async (req, res) => {
   });
 };
 
-export const harperUserMessage = async (req, res) => {
+export const harperSetAvatar = (req, res) => {
+  const { image, user } = req.body;
   const dbUrl = process.env.HARPERDB_URL;
   const dbPw = process.env.HARPERDB_PW;
 
   if (!dbUrl || !dbPw) {
-    return res.status(500).send("Invalid HarperDB configuration.");
+    return res.status(500).send({
+      message: "Invalid HarperDB configuration.",
+    });
   }
 
-  const { user, friend, message, timestamp } = req.body;
+  const checkExistingUserQuery = {
+    operation: "search_by_value",
+    schema: "flamingo",
+    table: "users",
+    search_attribute: "email",
+    search_value: user.email,
+  };
 
-  try {
-    const userDataResponse = await axios.post(
-      dbUrl,
-      {
-        operation: "search_by_value",
-        schema: "flamingo",
-        table: "user_messages",
-        search_attribute: "user_id",
-        search_value: user.id,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: dbPw,
-        },
-      }
-    );
+  const checkExistingUserConfig = {
+    method: "post",
+    url: dbUrl,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: dbPw,
+    },
+    data: JSON.stringify(checkExistingUserQuery),
+  };
 
-    const userData = userDataResponse.data[0];
+  axios(checkExistingUserConfig)
+    .then(function (response) {
+      const existingUser = response.data[0];
 
-    if (userData) {
-      const existingFriend = userData.friends.find(
-        (existingFriend) => existingFriend.friend.id === friend.id
-      );
+      if (existingUser) {
+        const updateUserQuery = {
+          operation: "update",
+          schema: "flamingo",
+          table: "users",
+          records: [
+            {
+              id: existingUser.id,
+              avatarImage: image,
+              isAvatarImageSet: true,
+            },
+          ],
+        };
 
-      if (existingFriend) {
-        existingFriend.last_message = message;
-        existingFriend.timestamp = timestamp;
+        const updateUserConfig = {
+          method: "post",
+          url: dbUrl,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: dbPw,
+          },
+          data: JSON.stringify(updateUserQuery),
+        };
+
+        axios(updateUserConfig)
+          .then(function () {
+            return res.status(200).send({
+              message: "User avatar updated successfully.",
+            });
+          })
+          .catch(function (error) {
+            return res.status(500).send({
+              message: error,
+            });
+          });
       } else {
-        userData.friends.push({
-          friend: friend,
-          last_message: message,
-          timestamp: timestamp,
+        return res.status(400).send({
+          message: "User with this email doesn't exist",
         });
       }
-
-      const updateUserMessagesQuery = {
-        operation: "update",
-        schema: "flamingo",
-        table: "user_messages",
-        records: [userData],
-      };
-
-      await axios.post(dbUrl, updateUserMessagesQuery, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: dbPw,
-        },
+    })
+    .catch(function (error) {
+      return res.status(500).send({
+        message: error,
       });
-    } else {
-      const newUser = {
-        user_id: user.id,
-        friends: [
-          {
-            friend: friend,
-            last_message: message,
-            timestamp: timestamp,
-          },
-        ],
-      };
-
-      const insertUserMessagesQuery = {
-        operation: "insert",
-        schema: "flamingo",
-        table: "user_messages",
-        records: [newUser],
-      };
-
-      await axios.post(dbUrl, insertUserMessagesQuery, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: dbPw,
-        },
-      });
-    }
-
-    return res.status(200).send({
-      message: "Message sent successfully",
     });
-  } catch (error) {
-    console.error("Error:", error);
-    return res.status(500).send("Internal Server Error");
-  }
-};
-
-export const harperGetUserMessage = async (req, res) => {
-  const dbUrl = process.env.HARPERDB_URL;
-  const dbPw = process.env.HARPERDB_PW;
-
-  if (!dbUrl || !dbPw) {
-    return res.status(500).send("Invalid HarperDB configuration.");
-  }
-
-  const { id } = req.params;
-  try {
-    const userDataResponse = await axios.post(
-      dbUrl,
-      {
-        operation: "search_by_value",
-        schema: "flamingo",
-        table: "user_messages",
-        search_attribute: "user_id",
-        search_value: id,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: dbPw,
-        },
-      }
-    );
-
-    const userData = userDataResponse.data[0];
-
-    if (userData) {
-      return res.status(200).send({
-        message: "User messages fetched successfully",
-        data: userData,
-      });
-    } else {
-      return res.status(400).send({
-        message: "Could not find user messages",
-      });
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    return res.status(500).send("Internal Server Error");
-  }
 };

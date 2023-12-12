@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import registerImage from "../../assets/register.svg";
 import Swal from "sweetalert2";
 
 const Register = () => {
+  const navigate = useNavigate()
   const [values, setValues] = useState({
     username: "",
     email: "",
@@ -16,7 +17,6 @@ const Register = () => {
   };
 
   const handleSubmit = () => {
-    console.log(values);
     fetch(`${process.env.REACT_APP_NODE_API}/user/register`, {
       method: "POST",
       headers: {
@@ -33,10 +33,12 @@ const Register = () => {
       if (res.status === 200) {
         Swal.fire({
           title: "Successful",
-          text: "You will be logged in few seconds",
+          text: "You have successfully registered",
           icon: "success",
           confirmButtonText: "OK",
-        });
+        }).then(()=>{
+          navigate('/setavatar')
+        })
       } else {
         res.json().then((error) => {
           Swal.fire({

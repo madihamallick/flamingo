@@ -8,6 +8,7 @@ import { userRouter } from "./routes/user.route.js";
 import bodyParser from "body-parser";
 import harperSaveMessage from "./services/save-message.js";
 import harperGetMessages from "./services/get-messages.js";
+import { messageRouter } from "./routes/message.route.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +18,7 @@ app.use(helmet());
 app.disable("x-powered-by");
 app.use(bodyParser.json());
 app.use("/user", userRouter);
+app.use("/message", messageRouter)
 
 const io = new Server(server, {
   cors: {
