@@ -18,7 +18,7 @@ app.use(helmet());
 app.disable("x-powered-by");
 app.use(bodyParser.json());
 app.use("/user", userRouter);
-app.use("/message", messageRouter)
+app.use("/message", messageRouter);
 
 const io = new Server(server, {
   cors: {
@@ -47,6 +47,7 @@ io.on("connection", (socket) => {
     const toUserSocketId = onlineUsers.get(toUserId);
     if (toUserSocketId) {
       io.to(toUserSocketId).emit("chat-message", toUserId, message, fromUserId);
+      io.to(toUserSocketId).emit("update-friend-list");
     } else {
       console.log("User not found:", toUserId);
     }

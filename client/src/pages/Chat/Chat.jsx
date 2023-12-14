@@ -93,6 +93,17 @@ const Chat = ({ socket }) => {
         ...prevMessages,
         { toUserId, message, fromUserId },
       ]);
+
+      socket.on("update-friend-list", () => {
+        fetch(`${process.env.REACT_APP_NODE_API}/message/${userid}`)
+          .then((res) => res.json())
+          .then((data) => {
+            setFriends(data?.data?.friends);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
     });
     return () => {
       socket.off(CHAT_MESSAGE);
@@ -162,6 +173,7 @@ const Chat = ({ socket }) => {
           });
         }
       });
+
       setMessagesReceived((prevMessages) => [
         ...prevMessages,
         {
@@ -218,9 +230,11 @@ const Chat = ({ socket }) => {
           </div>
           <div className="flex flex-col items-center bg-lemon bg-opacity-60 border border-gray-200 mt-4 w-full py-6 px-4 rounded-lg">
             <div className="h-20 w-20 rounded-full border overflow-hidden">
-              {user.isAvatarImageSet === true ? (
-               <img src={`data:image/svg+xml;base64,${user.avatarImage}`} alt="avatarimage" />
-
+              {user?.isAvatarImageSet === true ? (
+                <img
+                  src={`data:image/svg+xml;base64,${user.avatarImage}`}
+                  alt="avatarimage"
+                />
               ) : (
                 <img
                   src="https://avatars3.githubusercontent.com/u/2763884?s=128"
@@ -294,11 +308,11 @@ const Chat = ({ socket }) => {
                       onClick={() => setSender(user.friend)}
                     >
                       <div className="flex items-center justify-center h-8 w-8 text-white bg-bluelight rounded-full">
-                        {user?.friend.username[0]}
+                        {user?.friend?.username[0]}
                       </div>
                       <div className="flex flex-col justify-start items-start">
                         <div className="ml-2 text-sm font-semibold">
-                          {user?.friend.username}
+                          {user?.friend?.username}
                         </div>
                         <div
                           className="ml-2 text-[12px] text-gray-400 overflow-hidden "
