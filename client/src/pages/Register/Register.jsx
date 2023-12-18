@@ -37,7 +37,7 @@ const Register = () => {
           icon: "success",
           confirmButtonText: "OK",
         }).then(()=>{
-          navigate('/setavatar')
+          navigate('/login')
         })
       } else {
         res.json().then((error) => {

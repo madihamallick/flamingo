@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import loginImage from "../../assets/login.svg";
 import Swal from "sweetalert2";
@@ -9,6 +9,12 @@ const Login = () => {
     email: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (sessionStorage.getItem("token")) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
@@ -36,7 +42,7 @@ const Login = () => {
           icon: "success",
           confirmButtonText: "OK",
         }).then(() => {
-          navigate("/");
+          navigate("/setavatar");
         });
       } else {
         res.json().then((error) => {
