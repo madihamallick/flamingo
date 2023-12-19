@@ -23,10 +23,6 @@ export default function SetAvatar() {
   const user = JSON.parse(sessionStorage.getItem("user"));
 
   useEffect(() => {
-    if (!sessionStorage.getItem("token")) navigate("/login");
-  }, [navigate]);
-
-  useEffect(() => {
     async function fetchData() {
       const data = [];
       for (let i = 0; i < 4; i++) {
@@ -59,7 +55,7 @@ export default function SetAvatar() {
         user.isAvatarImageSet = true;
         user.avatarImage = data.image;
         toast.success("Avatar added successfully", toastOptions);
-        navigate("/");
+        navigate("/login");
       } else {
         toast.error("Error setting avatar. Please try again.", toastOptions);
       }

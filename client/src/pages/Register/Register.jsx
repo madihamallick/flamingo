@@ -4,7 +4,7 @@ import registerImage from "../../assets/register.svg";
 import Swal from "sweetalert2";
 
 const Register = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [values, setValues] = useState({
     username: "",
     email: "",
@@ -36,18 +36,33 @@ const Register = () => {
           text: "You have successfully registered",
           icon: "success",
           confirmButtonText: "OK",
-        }).then(()=>{
-          navigate('/login')
-        })
-      } else {
-        res.json().then((error) => {
-          Swal.fire({
-            title: "Error!",
-            text: error.message || "An error occurred",
-            icon: "error",
-            confirmButtonText: "Ok",
-          });
+        }).then(() => {
+          sessionStorage.setItem(
+            "user",
+            JSON.stringify({
+              username: values.username,
+              email: values.email,
+              password: values.password,
+              isAvatarImageSet: false,
+              avatarImage: null,
+            })
+          );
+          navigate("/setavatar");
         });
+      } else {
+        res
+          .json()
+          .then((error) => {
+            Swal.fire({
+              title: "Error!",
+              text: error.message || "An error occurred",
+              icon: "error",
+              confirmButtonText: "Ok",
+            });
+          })
+          .then(() => {
+            navigate("/register");
+          });
       }
     });
   };

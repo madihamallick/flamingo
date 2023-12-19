@@ -42,7 +42,7 @@ const Login = () => {
           icon: "success",
           confirmButtonText: "OK",
         }).then(() => {
-          navigate("/setavatar");
+          navigate("/");
         });
       } else {
         res.json().then((error) => {
