@@ -30,6 +30,8 @@ config();
 
 global.onlineUsers = new Map();
 io.on("connection", (socket) => {
+  socket.emit("me", socket.id);
+
   global.chatSocket = socket;
 
   socket.on("add-user", (userId) => {
@@ -54,6 +56,22 @@ io.on("connection", (socket) => {
     harperSaveMessage(message, toUserId, fromUserId)
       .then((response) => console.log(response))
       .catch((err) => console.log(err));
+  });
+
+  socket.on("disconnect", () => {
+    socket.broadcast.emit("callended");
+  });
+
+  socket.on("calluser", ({ userToCall, signalData, from, name }) => {
+    io.to(userToCall).emit("calluser", {
+      signal: signalData,
+      from,
+      name,
+    });
+  });
+
+  socket.on("answercall", () => {
+    io.to(data.to).emit("callaccepted", data.signal);
   });
 });
 

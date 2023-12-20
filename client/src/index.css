@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+*{
+  margin: 0;
+  padding: 0;
+}
+
 .svg-icon.search-icon {
   display: inline-block;
   width: 20px;
@@ -21,3 +26,4 @@
   background-color: #4a5568;
   border-radius: 6px;
 }
+
