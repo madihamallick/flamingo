@@ -7,28 +7,30 @@ const SocketContext = createContext();
 const socket = io(process.env.REACT_APP_NODE_API);
 
 const ContextProvider = ({ children }) => {
-  const [stream, serStream] = useState(null);
+  const [stream, setStream] = useState(null);
   const [me, setMe] = useState("");
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setcallEnded] = useState(false);
   const [name, setName] = useState("");
-  const [call, setCall] = useState(false)
+  const [call, setCall] = useState(false);
 
-  const myvideo = useRef();
+  const myVideo = useRef();
   const userVideo = useRef();
   const connectionRef = useRef();
 
   useEffect(() => {
     navigator.mediaDevices
-      .getUserMedia({ video: false, audio: false })
+      .getUserMedia({ video: true, audio: true })
       .then((currentStream) => {
-        serStream(currentStream);
+        setStream(currentStream);
 
-        myvideo.current.srcObject = currentStream;
+        if (myVideo.current) {
+          myVideo.current.srcObject = currentStream;
+        }
       });
 
     socket.on("me", (id) => setMe(id));
-    socket.on("calluser", (from, callerName, signal) => {
+    socket.on("calluser", ({ from, name: callerName, signal }) => {
       setCall({ isRecievedCall: true, from, name: callerName, signal });
     });
   }, []);
@@ -82,7 +84,7 @@ const ContextProvider = ({ children }) => {
   const leaveCall = () => {
     setcallEnded(true);
 
-    connectionRef.current.destroy();
+    // connectionRef.current.destroy();
 
     window.location.reload();
   };
@@ -92,7 +94,7 @@ const ContextProvider = ({ children }) => {
       value={{
         call,
         callAccepted,
-        myvideo,
+        myVideo,
         userVideo,
         stream,
         name,
@@ -109,4 +111,4 @@ const ContextProvider = ({ children }) => {
   );
 };
 
-export {ContextProvider, SocketContext}
+export { ContextProvider, SocketContext };
