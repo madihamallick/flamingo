@@ -45,6 +45,10 @@ io.on("connection", (socket) => {
       .catch((err) => console.log(err));
   });
 
+  socket.on("refresh", () => {
+    io.emit("refresh");
+  });
+
   socket.on("send-chat-message", ({ toUserId, message, fromUserId }) => {
     const toUserSocketId = onlineUsers.get(toUserId);
     if (toUserSocketId) {
@@ -63,7 +67,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("calluser", ({ userToCall, signalData, from, name }) => {
-    console.log(userToCall)
+    console.log(userToCall);
     io.to(userToCall).emit("calluser", {
       signal: signalData,
       from,

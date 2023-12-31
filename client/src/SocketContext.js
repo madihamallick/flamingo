@@ -4,7 +4,7 @@ import Peer from "simple-peer";
 
 const SocketContext = createContext();
 
-const socket = io(process.env.REACT_APP_NODE_API || "https://flamingo-server.onrender.com");
+const socket = io(process.env.REACT_APP_NODE_API);
 
 const ContextProvider = ({ children }) => {
   const [stream, setStream] = useState(null);
@@ -33,6 +33,16 @@ const ContextProvider = ({ children }) => {
     socket.on("calluser", ({ from, name: callerName, signal }) => {
       setCall({ isRecievedCall: true, from, name: callerName, signal });
     });
+
+    socket.on("refresh", () => {
+      window.location.reload();
+    });
+
+    return () => {
+      socket.off("refresh");
+      socket.off("me");
+      socket.off("calluser");
+    };
   }, []);
 
   const answerCall = () => {
@@ -83,12 +93,11 @@ const ContextProvider = ({ children }) => {
 
   const leaveCall = () => {
     setcallEnded(true);
+    
+    socket.emit("refresh");
 
     // connectionRef.current.destroy();
-
-    window.location.reload();
   };
-
   return (
     <SocketContext.Provider
       value={{

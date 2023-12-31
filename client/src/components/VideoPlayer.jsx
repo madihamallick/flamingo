@@ -16,7 +16,7 @@ const VideoPlayer = () => {
         <h2 className="text-md">{name || "Name"}</h2>
         <video muted ref={myVideo} autoPlay />
       </div>
-      {/* )} */}
+      {/* )}  */}
 
       {callAccepted && !callEnded && (
         <div className="bg-white border-2 w-[22rem] h-[22rem]">
