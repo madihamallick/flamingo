@@ -1,10 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import videomeet from "../../assets/video-meet.jpg";
 import VideoPlayer from "../../components/VideoPlayer";
 import Options from "../../components/Options";
 import Notifications from "../../components/Notifications";
 
 const VideoCall = () => {
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!sessionStorage.getItem("token")) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   return (
     <div>
       <header className="mx-auto w-full max-w-screen-md border border-gray-100 bg-white/80 py-3 shadow backdrop-blur-lg md:top-6 md:rounded-3xl lg:max-w-screen-lg">

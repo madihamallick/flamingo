@@ -5,6 +5,7 @@ import Register from "./pages/Register/Register";
 import Login from "./pages/Login/Login";
 import SetAvatar from "./components/setAvatar";
 import VideoCall from "./pages/VideoCall/VideoCall";
+import WordChallenge from "./components/WordChallenge";
 
 function App() {
   const socket = io(process.env.REACT_APP_NODE_API);
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<Chat socket={socket} />} />
         <Route path="/setavatar" element={<SetAvatar />} />
         <Route path="/videocall" element={<VideoCall/>}/>
+        <Route path="/wordchallenge" element={<WordChallenge/>}/>
       </Routes>
     </Router>
   );
