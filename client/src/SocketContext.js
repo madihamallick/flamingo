@@ -19,16 +19,24 @@ const ContextProvider = ({ children }) => {
   const connectionRef = useRef();
 
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((currentStream) => {
-        setStream(currentStream);
-
-        if (myVideo.current) {
-          myVideo.current.srcObject = currentStream;
-        }
-      });
-
+    try {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then((currentStream) => {
+          setStream(currentStream);
+    
+          if (myVideo.current) {
+            myVideo.current.srcObject = currentStream;
+          }
+        })
+        .catch((error) => {
+          console.error('Error accessing audio:', error);
+          alert("Please allow access to your microphone.");
+        });
+    } catch (error) {
+      console.error('Error trying to access media devices:', error);
+      alert("An error occurred while trying to access media devices.");
+    }
+    
     socket.on("me", (id) => setMe(id));
     socket.on("calluser", ({ from, name: callerName, signal }) => {
       setCall({ isRecievedCall: true, from, name: callerName, signal });
@@ -93,7 +101,7 @@ const ContextProvider = ({ children }) => {
 
   const leaveCall = () => {
     setcallEnded(true);
-    
+
     socket.emit("refresh");
 
     // connectionRef.current.destroy();
